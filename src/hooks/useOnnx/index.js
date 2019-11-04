@@ -32,6 +32,7 @@ function stateReducer(state, action) {
 			};
 		case actions.PREDICTION_COMPLETE:
 			return {
+				...state,
 				status: actions.PREDICTION_COMPLETE,
 				prediction: action.payload.prediction,
 				inferenceTime: action.payload.inferenceTime

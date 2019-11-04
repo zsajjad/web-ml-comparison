@@ -6,7 +6,6 @@ import loadImageToCanvas from "../../utils/loadImageToCanvas";
 
 let runner;
 const MODEL_URL = "./squeezenet1_1.onnx";
-// const MODEL_URL = "https://zsajjad-93.firebaseapp.com/squeezenet1_1.onnx";
 
 export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 	const [state, dispatch] = useModelReducer();
