@@ -1,11 +1,34 @@
 import React, { useEffect, useReducer } from "react";
 import * as WebDNN from "webdnn";
 import useModelReducer, { actions } from "../useModelReducer";
+import { getImageArray, mapOutputToClasses } from "./utils";
 
-import loadImageToCanvas from "../../utils/loadImageToCanvas";
 
 let runner;
-const MODEL_URL = "./squeezenet1_1.onnx";
+const MODEL_URL = "./webdnn";
+
+export async function getPredictions({ url, width, height }) {
+	if (!runner) {
+		return {
+			prediction: [],
+			inferenceTime: 0,
+		};
+	}
+	const start = new Date();
+	const imageArray = await getImageArray({ url, width, height });
+	runner.inputs[0].set(imageArray);
+	await runner.run();
+	const end = new Date();
+
+	const output = runner.outputs[0].toActual();
+	const topK = WebDNN.Math.argmax(output, 5);
+	console.log({ topK });
+	const prediction = mapOutputToClasses(topK);
+	return {
+		prediction,
+		inferenceTime: end.getTime() - start.getTime()
+	};
+} 
 
 export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 	const [state, dispatch] = useModelReducer();
@@ -21,32 +44,14 @@ export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 		dispatch({
 			type: actions.PREDICTION_START
 		});
-		const elementId = "input-canvas";
-		const { canvas } = await loadImageToCanvas({
-			elementId,
-			url,
-			loaderConfigs: { maxWidth: width, maxHeight: height }
-		});
 
-		const imageArray = await WebDNN.Image.getImageArray(canvas, {
-			dstW: 223,
-			dstH: 223,
-			order: WebDNN.Image.Order.HWC,
-			color: WebDNN.Image.Color.BGR,
-			bias: [122.679, 116.669, 104.006] // RGB mean (not BGR)
-		});
-		const start = new Date();
-		runner.inputs[0].set(imageArray);
-		await runner.run();
-		const end = new Date();
+		const { prediction, inferenceTime} = await getPredictions({ url, width, height });
 
-		const output = runner.outputs[0].toActual();
-		const prediction = WebDNN.Math.argmax(output, 5);
 		dispatch({
 			type: actions.PREDICTION_COMPLETE,
 			payload: {
 				prediction,
-				inferenceTime: end.getTime() - start.getTime()
+				inferenceTime
 			}
 		});
 	};
