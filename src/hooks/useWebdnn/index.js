@@ -1,17 +1,19 @@
-import React, { useEffect, useReducer } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect } from "react";
 import * as WebDNN from "webdnn";
 import useModelReducer, { actions } from "../useModelReducer";
-import { getImageArray, mapOutputToClasses } from "./utils";
-
+import { getPredictedClass } from "../../utils";
+import { getImageArray } from "./utils";
 
 let runner;
-const MODEL_URL = "./webdnn";
 
-export async function getPredictions({ url, width, height }) {
+const MODEL_URL = "./squeezenet-webdnn";
+
+async function getPredictions({ url, width, height }) {
 	if (!runner) {
 		return {
 			prediction: [],
-			inferenceTime: 0,
+			inferenceTime: 0
 		};
 	}
 	const start = new Date();
@@ -21,14 +23,13 @@ export async function getPredictions({ url, width, height }) {
 	const end = new Date();
 
 	const output = runner.outputs[0].toActual();
-	const topK = WebDNN.Math.argmax(output, 5);
-	console.log({ topK });
-	const prediction = mapOutputToClasses(topK);
+	// const topK = WebDNN.Math.argmax(output, 5);
+	// prediction: mapOutputToClasses(topK),
 	return {
-		prediction,
+		prediction: getPredictedClass(output),
 		inferenceTime: end.getTime() - start.getTime()
 	};
-} 
+}
 
 export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 	const [state, dispatch] = useModelReducer();
@@ -45,7 +46,11 @@ export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 			type: actions.PREDICTION_START
 		});
 
-		const { prediction, inferenceTime} = await getPredictions({ url, width, height });
+		const { prediction, inferenceTime } = await getPredictions({
+			url,
+			width,
+			height
+		});
 
 		dispatch({
 			type: actions.PREDICTION_COMPLETE,
@@ -73,7 +78,7 @@ export default function useWebdnn({ imageUrl, width = 224, height = 224 }) {
 	}, [state.status]);
 
 	useEffect(() => {
-		if (state !== "init") {
+		if (imageUrl && state.status !== actions.RESET) {
 			dispatch({ type: actions.RESET });
 		}
 	}, [imageUrl]);

@@ -1,75 +1,133 @@
-import React, { useEffect, useReducer } from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect } from "react";
+// import * as mobilenet from "@tensorflow-models/mobilenet";
+import * as tf from "@tensorflow/tfjs";
 
-let model;
+import useModelReducer, { actions } from "./useModelReducer";
+import IMAGENET_CLASSES from "../data/imagenetClasses";
 
-const actions = {
-	RESET: "init",
-	MODEL_LOADED: "modelLoaded",
-	PREDICTION_START: "predicting",
-	PREDICTION_COMPLETE: "predicted"
-};
+const MODEL_URL = "./squeezenet-tfjs/model.json";
 
-const initialState = {
-	status: actions.RESET,
-	prediction: null,
-	inferenceTime: 0
-};
+// const MODEL_URL = "./resnet50-tfjs/model.json";
+// const MODEL_URL =
+// 	"https://tfhub.dev/google/imagenet/mobilenet_v2_050_224/classification/2";
+const IMAGE_SIZE = 227;
 
-function stateReducer(state, action) {
-	switch (action.type) {
-		case actions.RESET:
-			return initialState;
-		case actions.MODEL_LOADED:
-			return {
-				...initialState,
-				status: actions.MODEL_LOADED
-			};
-		case actions.PREDICTION_START:
-			return {
-				...state,
-				status: actions.MODEL_LOADED
-			};
-		case actions.PREDICTION_COMPLETE:
-			return {
-				status: actions.PREDICTION_COMPLETE,
-				prediction: action.payload.prediction,
-				inferenceTime: action.payload.inferenceTime
-			};
-		default:
-			return state;
+let tfModel;
+
+async function getTopKClasses(logits, topK = 5) {
+	const softmax = logits.softmax();
+	const values = await softmax.data();
+	softmax.dispose();
+
+	const valuesAndIndices = [];
+	for (let i = 0; i < values.length; i++) {
+		valuesAndIndices.push({ value: values[i], index: i });
 	}
+	valuesAndIndices.sort((a, b) => {
+		return b.value - a.value;
+	});
+	const topkValues = new Float32Array(topK);
+	const topkIndices = new Int32Array(topK);
+	for (let i = 0; i < topK; i++) {
+		topkValues[i] = valuesAndIndices[i].value;
+		topkIndices[i] = valuesAndIndices[i].index;
+	}
+
+	const topClassesAndProbs = [];
+	for (let i = 0; i < topkIndices.length; i++) {
+		topClassesAndProbs.push({
+			className: IMAGENET_CLASSES[topkIndices[i]][1],
+			probability: topkValues[i]
+		});
+	}
+	return topClassesAndProbs;
 }
 
-export default function({ imageUrl, width = 224, height = 224 }) {
-	const [state, dispatch] = useReducer(stateReducer, initialState);
+function infer(img) {
+	return tf.tidy(() => {
+		if (!(img instanceof tf.Tensor)) {
+			img = tf.browser.fromPixels(img);
+		}
+		// const inputMax = 1;
+		// const inputMin = -1;
+		// const normalizationConstant = (inputMax - inputMin) / 255.0;
+
+		// Normalize the image from [0, 255] to [inputMin, inputMax].
+		const normalized = img.toFloat();
+		// .mul(normalizationConstant)
+		// .add(inputMin);
+
+		// Resize the image to
+		let resized = normalized;
+		if (img.shape[0] !== IMAGE_SIZE || img.shape[1] !== IMAGE_SIZE) {
+			const alignCorners = true;
+			resized = tf.image.resizeBilinear(
+				normalized,
+				[IMAGE_SIZE, IMAGE_SIZE],
+				alignCorners
+			);
+		}
+
+		// Reshape so we can pass it to predict.
+		const batched = resized.reshape([-1, IMAGE_SIZE, IMAGE_SIZE, 3]);
+
+		// let result;
+
+		const result = tfModel.predict(batched);
+		// Remove the very first logit (background noise).
+		// result = logits1001.slice([0, 1], [-1, 1000]);
+
+		return result;
+	});
+}
+
+export default function({ imageUrl }) {
+	console.log("function");
+	const [state, dispatch] = useModelReducer();
 
 	const loadModel = async () => {
-		if (!model) {
-			model = await mobilenet.load();
+		console.log("loadModel");
+		if (!tfModel) {
+			console.log(tf.getBackend());
+			tfModel = await tf.loadGraphModel(MODEL_URL, { fromTFHub: false });
+			const zeros = tf.zeros([1, IMAGE_SIZE, IMAGE_SIZE, 3]);
+			tfModel.predict(zeros).print();
+			// tfModel = await mobilenet.load({
+			// 	version: 2,
+			// 	alpha: 0.5
+			// });
 		}
 		dispatch({ type: actions.MODEL_LOADED });
 	};
 
-	const predict = async ({ url, width, height }) => {
+	const predict = async ({ url }) => {
+		console.log("predict");
 		dispatch({
 			type: actions.PREDICTION_START
 		});
 		const img = new Image();
 		img.crossOrigin = "anonymous";
 		img.src = url;
-		img.width = width;
-		img.height = height;
-		const start = new Date();
-		const prediction = await model.classify(img);
-		const end = new Date();
-		dispatch({
-			type: actions.PREDICTION_COMPLETE,
-			payload: {
-				prediction,
-				inferenceTime: end.getTime() - start.getTime()
-			}
-		});
+		img.width = IMAGE_SIZE;
+		img.height = IMAGE_SIZE;
+		img.onload = async function() {
+			setTimeout(async () => {
+				const start = new Date();
+				const logits = infer(img);
+				const prediction = await getTopKClasses(logits, 5);
+				logits.dispose();
+				console.log(prediction);
+				const end = new Date();
+				dispatch({
+					type: actions.PREDICTION_COMPLETE,
+					payload: {
+						prediction,
+						inferenceTime: end.getTime() - start.getTime()
+					}
+				});
+			}, 2000);
+		};
 	};
 
 	useEffect(() => {
@@ -82,14 +140,14 @@ export default function({ imageUrl, width = 224, height = 224 }) {
 			!state.prediction &&
 			state.status === actions.MODEL_LOADED
 		) {
-			predict({ url: imageUrl, width, height });
+			predict({ url: imageUrl });
 			return () => {};
 		}
 		return () => {};
 	}, [state.status]);
 
 	useEffect(() => {
-		if (state !== "init") {
+		if (imageUrl && state.status !== actions.RESET) {
 			dispatch({ type: actions.RESET });
 		}
 	}, [imageUrl]);

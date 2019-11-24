@@ -13,6 +13,8 @@
     "onnxjs": "^0.1.7",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
+    "react-intl": "^3.4.0",
+    "react-material-layout": "^1.1.11",
     "react-scripts": "3.2.0",
     "styled-components": "^4.4.1",
     "webdnn": "^1.2.10"
@@ -37,5 +39,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "kerosene": "https://gitlab.com/fetchsky/kerosene",
+    "please-upgrade-node": "^3.2.0"
   }
 }

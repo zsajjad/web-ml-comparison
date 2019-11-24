@@ -1,49 +1,22 @@
-import React, { useEffect, useReducer } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect } from "react";
 import { InferenceSession } from "onnxjs";
 
-import { getTensorFromCanvasContext, getPredictedClass } from "./utils";
+import { getTensorFromCanvasContext } from "./utils";
 import loadImageToCanvas from "../../utils/loadImageToCanvas";
+import { getPredictedClass } from "../../utils";
+
+import useModelReducer, { actions } from "../useModelReducer";
 
 // const MODEL_URL = "./mobilenetv2-1.0.onnx";
-const MODEL_URL = "./squeezenet1_1.onnx";
-const inferenceSession = new InferenceSession({ backendHint: "webgl" });
+const MODEL_URL = "./squeezenet.onnx";
+// const MODEL_URL = "./resnet50.onnx";
+
+const inferenceSession = new InferenceSession({ backendHint: "cpu" });
 let isModelLoaded = false;
 
-const actions = {
-	RESET: "init",
-	MODEL_LOADED: "modelLoaded",
-	PREDICTION_COMPLETE: "predicted"
-};
-
-const initialState = {
-	status: "init",
-	prediction: null,
-	inferenceTime: 0
-};
-
-function stateReducer(state, action) {
-	switch (action.type) {
-		case actions.RESET:
-			return initialState;
-		case actions.MODEL_LOADED:
-			return {
-				...initialState,
-				status: actions.MODEL_LOADED
-			};
-		case actions.PREDICTION_COMPLETE:
-			return {
-				...state,
-				status: actions.PREDICTION_COMPLETE,
-				prediction: action.payload.prediction,
-				inferenceTime: action.payload.inferenceTime
-			};
-		default:
-	}
-}
-
 export default function({ imageUrl, width = 224, height = 224 }) {
-	const [state, dispatch] = useReducer(stateReducer, initialState);
-
+	const [state, dispatch] = useModelReducer();
 	const loadModel = async () => {
 		if (!isModelLoaded) {
 			await inferenceSession.loadModel(MODEL_URL);
@@ -53,6 +26,9 @@ export default function({ imageUrl, width = 224, height = 224 }) {
 	};
 
 	const predict = async ({ url, width, height }) => {
+		if (!url) {
+			return;
+		}
 		const elementId = "input-canvas";
 		const { ctx } = await loadImageToCanvas({
 			elementId,
@@ -92,7 +68,7 @@ export default function({ imageUrl, width = 224, height = 224 }) {
 	}, [state.status]);
 
 	useEffect(() => {
-		if (state !== "init") {
+		if (imageUrl && state.status !== actions.RESET) {
 			dispatch({ type: actions.RESET });
 		}
 	}, [imageUrl]);

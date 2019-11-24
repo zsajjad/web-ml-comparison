@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from "react";
+import { useReducer } from "react";
 
 export const actions = {
 	RESET: "init",
@@ -8,7 +8,7 @@ export const actions = {
 };
 
 const initialState = {
-	status: actions.RESET,
+	status: null,
 	prediction: null,
 	inferenceTime: 0
 };
@@ -16,7 +16,7 @@ const initialState = {
 function stateReducer(state, action) {
 	switch (action.type) {
 		case actions.RESET:
-			return initialState;
+			return { ...initialState, status: actions.RESET };
 		case actions.MODEL_LOADED:
 			return {
 				...initialState,
