@@ -5,10 +5,16 @@
  */
 
 import React from "react";
-// import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import styled from "styled-components";
 
-import data from "../../data/images";
+import data from "data/images";
+
+const Heading = styled.h3`
+	color: #efefef;
+	font-size: 18px;
+	margin: 6px;
+`;
 
 const Container = styled.div.attrs({
 	"data-layout": "row",
@@ -54,20 +60,26 @@ const Image = styled.img`
 
 function ImageSelection({ selectedUrl, onSelect }) {
 	return (
-		<Container>
-			{data.map(img => (
-				<Image
-					selected={selectedUrl === img.value}
-					key={img.value}
-					src={img.value}
-					alt={img.text}
-					onClick={() => onSelect(img.value)}
-				/>
-			))}
-		</Container>
+		<>
+			<Heading>Select Image</Heading>
+			<Container>
+				{data.map(img => (
+					<Image
+						selected={selectedUrl === img.value}
+						key={img.value}
+						src={img.value}
+						alt={img.text}
+						onClick={() => onSelect(img.value)}
+					/>
+				))}
+			</Container>
+		</>
 	);
 }
 
-ImageSelection.propTypes = {};
+ImageSelection.propTypes = {
+	onSelect: PropTypes.func.isRequired,
+	selectedUrl: PropTypes.string
+};
 
 export default ImageSelection;

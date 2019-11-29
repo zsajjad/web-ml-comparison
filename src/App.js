@@ -4,41 +4,58 @@ import { IntlProvider } from "react-intl";
 // import logo from "./logo.svg";
 import "./App.css";
 
-import useTensorflow from "./hooks/useTensorflow";
-import useOnnx from "./hooks/useOnnx";
-import useWebdnn from "./hooks/useWebdnn";
-import ImageSelection from "./components/ImageSelection";
+// import useTensorflow from "./hooks/useTensorflow";
+// import useOnnx from "./hooks/useOnnx";
+// import useWebdnn from "./hooks/useWebdnn";
+import ImageSelection from "components/ImageSelection";
+import BackendSelection from "components/BackendSelection";
+import OnnxPredictor from "predictors/Onnx";
+import TensorflowPredictor from "predictors/Tensorflow";
+import WebdnnPredictor from "predictors/Webdnn";
 
 const STAGE = ["tensorflow", "onnx", "webdnn"];
 const initialState = {
-	selectedImage: null,
-	stage: STAGE[0]
+	selectedImage:
+		"https://farm4.staticflickr.com/3827/11349066413_99c32dee4a_z_d.jpg",
+	selectedBackend: "cpu",
+	isPredicting: false
 };
+
 function App() {
-	const [state, setState] = useState(initialState);
-	// const tensorflow = useTensorflow({
-	// 	imageUrl: state.selectedImage
-	// });
-	// console.log(tensorflow);
-	const onnx = useOnnx({
-		imageUrl: state.selectedImage
-	});
-	console.log(onnx);
-	// const webdnn = useWebdnn({
-	// 	imageUrl: state.selectedImage
-	// });
-	// console.log(webdnn);
+	const [state, set] = useState(initialState);
+	const setState = nextState => set({ ...state, ...nextState });
+	const predictorProps = {
+		selectedBackend: state.selectedBackend,
+		imageUrl: state.selectedImage,
+		isPredicting: state.isPredicting,
+		onPredictionStatusChange: status => {
+			if (status === "predicted") {
+				setState({ isPredicting: true });
+			} else {
+				setState({ isPredicting: false });
+			}
+		}
+	};
 	return (
 		<IntlProvider locale="en">
 			<div className="App">
 				<div className="backdrop" />
-				<header className="App-header">
+				<div className="content">
 					<h1>Web ML Comparison</h1>
 					<ImageSelection
 						selectedUrl={state.selectedImage}
-						onSelect={url => setState({ ...initialState, selectedImage: url })}
+						onSelect={url => setState({ selectedImage: url })}
 					/>
-				</header>
+					<BackendSelection
+						selected={state.selectedBackend}
+						onSelect={selectedBackend => setState({ selectedBackend })}
+					/>
+					<div className="predictions-container">
+						<TensorflowPredictor {...predictorProps} />
+						<OnnxPredictor {...predictorProps} />
+						<WebdnnPredictor {...predictorProps} />
+					</div>
+				</div>
 				<canvas
 					id="input-canvas"
 					width="224"

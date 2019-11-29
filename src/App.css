@@ -1,29 +1,39 @@
 .App {
 	text-align: center;
-	background-color: black;
+	background-color: #161d32;
 }
 
-.App-header {
+.content {
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	font-size: calc(10px + 2vmin);
-	color: white;
+	color: #f7f6f3;
 	position: relative;
 	z-index: 1;
 }
 
 .backdrop {
-	background-image: url("https://images.unsplash.com/photo-1542382257-80dedb725088?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2600&q=80");
+	background-image: url("https://images.unsplash.com/photo-1545987796-200677ee1011?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2250&q=80");
 	background-size: cover;
 	position: absolute;
 	top: 0;
 	left: 0;
 	bottom: 0;
 	right: 0;
-	opacity: 0.15;
+	opacity: 0;
+	filter: invert(1);
+}
+
+.predictions-container {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	justify-content: flex-start;
+	width: 100%;
+	max-width: 1080px;
 }
 
 .App-link {

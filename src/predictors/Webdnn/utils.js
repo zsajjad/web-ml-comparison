@@ -1,6 +1,6 @@
 import * as WebDNN from "webdnn";
-import loadImageToCanvas from "../../utils/loadImageToCanvas";
-import imagenetClasses from "../../data/imagenetClasses";
+import loadImageToCanvas from "utils/loadImageToCanvas";
+import imagenetClasses from "data/imagenetClasses";
 
 export async function getImageArray({ url, width, height }) {
 	const elementId = "input-canvas";
@@ -24,7 +24,6 @@ export function mapOutputToClasses(output) {
 	let iClass = {};
 	return output.map((key, index) => {
 		iClass = imagenetClasses[key];
-		console.log(key);
 		return {
 			id: iClass[0],
 			index: key,
