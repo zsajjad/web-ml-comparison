@@ -85,10 +85,10 @@ export default function({ imageUrl, backend }) {
 	const currentBackend = useRef();
 
 	const loadModel = async () => {
-		// tf.setBackend(backend);
 		tfModel = await tf.loadGraphModel(MODEL_URL, { fromTFHub: false });
 		const zeros = tf.zeros([1, IMAGE_SIZE, IMAGE_SIZE, 3]);
 		tfModel.predict(zeros).print();
+		tf.setBackend(backend);
 		currentBackend.current = backend;
 		dispatch({ type: actions.MODEL_LOADED });
 	};

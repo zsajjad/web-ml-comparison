@@ -8,6 +8,7 @@ export const Container = styled.div.attrs({
 	border-radius: 8px;
 	padding: 12px;
 	margin: 12px;
+	max-width: 33%;
 `;
 
 export const Heading = styled.h4`

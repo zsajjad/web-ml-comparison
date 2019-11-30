@@ -6,11 +6,9 @@ import useModelReducer, { actions } from "hooks/useModelReducer";
 
 import loadImageToCanvas from "utils/loadImageToCanvas";
 import { getPredictedClass } from "utils";
-import { getTensorFromCanvasContext } from "./utils";
+import { getTensorFromCanvasContext, warmupModel } from "./utils";
 
-// const MODEL_URL = "./mobilenetv2-1.0.onnx";
-const MODEL_URL = "./squeezenet.onnx";
-// const MODEL_URL = "./resnet50.onnx";
+const MODEL_URL = "./squeezenet1_1.onnx";
 
 const IMAGE_SIZE = 224;
 let inferenceSession;
@@ -24,6 +22,7 @@ export default function useOnnx({ imageUrl, backend }) {
 			backendHint: backend
 		});
 		await inferenceSession.loadModel(MODEL_URL);
+		await warmupModel(inferenceSession, [1, 3, IMAGE_SIZE, IMAGE_SIZE]);
 		currentBackend.current = backend;
 		dispatch({ type: actions.MODEL_LOADED });
 	};

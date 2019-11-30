@@ -11,7 +11,12 @@ import * as BACKENDS from "data/backends";
 import useOnnx from "./useOnnx";
 import PredictionCard from "components/PredictionCard";
 
-const SUPPORTED_BACKENDS = [BACKENDS.CPU, BACKENDS.WEB_GL];
+const SUPPORTED_BACKENDS = {
+	[BACKENDS.CPU]: "cpu",
+	[BACKENDS.WASM]: "wasm",
+	[BACKENDS.WEB_GL]: "webgl",
+	[BACKENDS.WEB_METAL]: "webgpu"
+};
 
 function OnnxPredictor({
 	selectedBackend,
@@ -20,7 +25,7 @@ function OnnxPredictor({
 	onPredictionStatusChange
 }) {
 	const onnx = useOnnx({
-		backend: selectedBackend,
+		backend: SUPPORTED_BACKENDS[selectedBackend],
 		imageUrl
 	});
 
@@ -29,7 +34,7 @@ function OnnxPredictor({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [onnx.status]);
 
-	if (!SUPPORTED_BACKENDS.includes(selectedBackend) || !imageUrl) {
+	if (!SUPPORTED_BACKENDS[selectedBackend] || !imageUrl) {
 		return null;
 	}
 

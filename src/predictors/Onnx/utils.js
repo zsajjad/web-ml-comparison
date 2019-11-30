@@ -2,6 +2,21 @@ import ndarray from "ndarray";
 import ops from "ndarray-ops";
 import { Tensor } from "onnxjs";
 
+export async function warmupModel(model, dims) {
+	// OK. we generate a random input and call Session.run() as a warmup query
+	const size = dims.reduce((a, b) => a * b);
+	const warmupTensor = new Tensor(new Float32Array(size), "float32", dims);
+
+	for (let i = 0; i < size; i++) {
+		warmupTensor.data[i] = Math.random() * 2.0 - 1.0; // random value [-1.0, 1.0)
+	}
+	try {
+		await model.run([warmupTensor]);
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 export function getTensorFromCanvasContext(ctx) {
 	const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
 	const { data, width, height } = imageData;

@@ -26,9 +26,9 @@ async function getPredictions({ url }) {
 	runner.inputs[0].set(imageArray);
 	await runner.run();
 	const end = new Date();
-
-	const output = runner.outputs[0].toActual();
+	const output = await runner.outputs[0].toActual();
 	// const topK = WebDNN.Math.argmax(output, 5);
+	// console.log(runner.outputs);
 	// prediction: mapOutputToClasses(topK),
 	return {
 		prediction: getPredictedClass(output),
@@ -39,8 +39,6 @@ async function getPredictions({ url }) {
 export default function useWebdnn({ imageUrl, backend }) {
 	const [state, dispatch] = useModelReducer();
 	const currentBackend = useRef();
-
-	console.log(WebDNN.getBackendAvailability());
 
 	const loadModel = async () => {
 		if (!runner || currentBackend.current !== backend) {

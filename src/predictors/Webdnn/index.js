@@ -13,6 +13,7 @@ import PredictionCard from "components/PredictionCard";
 
 const SUPPORTED_BACKENDS = {
 	[BACKENDS.CPU]: "fallback",
+	[BACKENDS.WASM]: "webassembly",
 	[BACKENDS.WEB_GL]: "webgl",
 	[BACKENDS.WEB_METAL]: "webgpu"
 };
@@ -27,8 +28,6 @@ function WebdnnPredictor({
 		backend: SUPPORTED_BACKENDS[selectedBackend],
 		imageUrl
 	});
-
-	console.log(webdnn);
 
 	useEffect(() => {
 		onPredictionStatusChange(webdnn.status);

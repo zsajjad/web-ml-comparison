@@ -11,8 +11,12 @@ import * as BACKENDS from "data/backends";
 import useTensorflow from "./useTensorflow";
 import PredictionCard from "components/PredictionCard";
 
-const SUPPORTED_BACKENDS = [BACKENDS.CPU, BACKENDS.WEB_GL];
-
+const SUPPORTED_BACKENDS = {
+	[BACKENDS.CPU]: "cpu",
+	[BACKENDS.WASM]: "cpu",
+	[BACKENDS.WEB_GL]: "webgl",
+	[BACKENDS.WEB_METAL]: "webgl"
+};
 function TensorflowPredictor({
 	selectedBackend,
 	imageUrl,
@@ -20,18 +24,16 @@ function TensorflowPredictor({
 	onPredictionStatusChange
 }) {
 	const tfjs = useTensorflow({
-		backend: selectedBackend,
+		backend: SUPPORTED_BACKENDS[selectedBackend],
 		imageUrl
 	});
-
-	console.log(tfjs);
 
 	useEffect(() => {
 		onPredictionStatusChange(tfjs.status);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [tfjs.status]);
 
-	if (!SUPPORTED_BACKENDS.includes(selectedBackend) || !imageUrl) {
+	if (!SUPPORTED_BACKENDS[selectedBackend] || !imageUrl) {
 		return null;
 	}
 

@@ -39,6 +39,11 @@ const backends = [
 		disabled: false
 	},
 	{
+		id: "wasm",
+		label: "Web Assembly",
+		disabled: false
+	},
+	{
 		id: "webgl",
 		label: "WebGL",
 		disabled: false
