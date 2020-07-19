@@ -8,7 +8,7 @@
     "blueimp-load-image": "^2.24.0",
     "brain.js": "^2.0.0-alpha.9",
     "chart.js": "^2.9.3",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "ndarray": "^1.0.18",
     "ndarray-ops": "^1.2.2",
     "onnxjs": "^0.1.7",
